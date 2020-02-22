@@ -1,3 +1,22 @@
 body {
     padding-top: 5rem;
 }
+
+
+.grid-container{
+    display: grid;
+    grid-template-columns: repeat(3,403px);
+    row-gap: 12px;
+    column-gap: 12px;
+
+}
+
+.img{
+    width: auto;
+    height: auto;
+    overflow: hidden;
+    object-fit: cover;
+}
+img{
+    width: 100%;
+}

@@ -9,6 +9,8 @@ from app import app
 from flask import render_template, request, redirect, url_for, flash, session, abort
 from werkzeug.utils import secure_filename
 
+from app.forms import UploadForm
+
 
 ###
 # Routing for your application.
@@ -32,15 +34,18 @@ def upload():
         abort(401)
 
     # Instantiate your form class
-
+    myform = UploadForm()
     # Validate file upload on submit
-    if request.method == 'POST':
+    if request.method == 'POST' and myform.validate_on_submit():
         # Get file data and save to your uploads folder
-
+        photo = myform.uploadfield.data
+        filename = secure_filename(photo.filename)
+        photo.save(os.path.join(app.config['UPLOAD_FOLDER'],filename))
         flash('File Saved', 'success')
         return redirect(url_for('home'))
 
-    return render_template('upload.html')
+    flash_errors(myform)
+    return render_template('upload.html',form=myform)
 
 
 @app.route('/login', methods=['POST', 'GET'])
@@ -63,6 +68,13 @@ def logout():
     flash('You were logged out', 'success')
     return redirect(url_for('home'))
 
+@app.route('/files')
+
+def files():
+    if not session.get('logged_in'):
+        abort(401)
+    filelst = get_uploaded_images()
+    return render_template('files.html',filelst=filelst)
 
 ###
 # The functions below should be applicable to all Flask apps.
@@ -76,6 +88,19 @@ def flash_errors(form):
                 getattr(form, field).label.text,
                 error
 ), 'danger')
+
+
+
+    
+def get_uploaded_images():
+    rootdir = os.getcwd()
+    lst = []
+    for subdir,dirs,files in os.walk(rootdir + '/app/static/uploads'):
+        for file in files:
+            if file.lower().endswith(('.png','.jpg','.jpeg')):
+                lst.append(file)
+        return lst
+
 
 @app.route('/<file_name>.txt')
 def send_text_file(file_name):
